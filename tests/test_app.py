@@ -73,6 +73,36 @@ def test_import_accepts_csv_and_rejects_bad_domain(client):
     assert rejected.status_code == 400
 
 
+def test_import_exposes_only_local_screenshot_assets(client, tmp_path, monkeypatch):
+    monkeypatch.setattr(recon_app, "DATA_DIR", tmp_path / "data")
+    payload = (
+        b'{"subdomains":["www.example.test","api.example.test"],"live_hosts":['
+        b'{"url":"https://www.example.test","host":"www.example.test","status_code":200,'
+        b'"screenshot":"demo-www-example-test.svg"},'
+        b'{"url":"https://api.example.test","host":"api.example.test","status_code":200,'
+        b'"screenshot":"../../README.md"}]}'
+    )
+    imported = client.post("/api/import", data={"domain": "example.test"}, files={"file": (
+        "demo.json", payload, "application/json")})
+    assert imported.status_code == 201
+
+    scan = client.get(f"/api/scans/{imported.json()['id']}").json()
+    screenshots = {host["host"]: host.get("screenshot") for host in scan["live_hosts"]}
+    assert screenshots["www.example.test"] == "/static/screenshots/demo-www-example-test.svg"
+    assert screenshots["api.example.test"] is None
+    image = client.get(screenshots["www.example.test"])
+    assert image.status_code == 200
+    assert image.headers["content-type"].startswith("image/svg+xml")
+
+
+def test_dashboard_uses_import_only_workflow(client):
+    page = client.get("/")
+    assert page.status_code == 200
+    assert "Start Scan" not in page.text
+    assert "demo-scan.json" in page.text
+    assert "Authorization" in page.text
+
+
 def test_api_requires_bearer_token_when_configured(client, monkeypatch):
     monkeypatch.setattr(recon_app, "APP_TOKEN", "test-token")
     assert client.get("/api/domains").status_code == 401

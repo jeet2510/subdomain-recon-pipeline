@@ -33,6 +33,7 @@ if os.getenv("DB_HOST"):
 else:
     database_url = os.getenv("DATABASE_URL", "sqlite:///./recon-dash.db")
 DATA_DIR = Path(os.getenv("DATA_DIR", "./data")).resolve()
+SCREENSHOT_DIR = Path(__file__).resolve().parent / "static" / "screenshots"
 APP_TOKEN = os.getenv("APP_TOKEN", "")
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 MAX_ROWS = 10000
@@ -76,6 +77,7 @@ class Scan(Base):
     )
     live_hosts: Mapped[list["LiveHost"]] = relationship(cascade="all, delete-orphan")
     stage_runs: Mapped[list["StageRun"]] = relationship(cascade="all, delete-orphan")
+    screenshots: Mapped[list["Screenshot"]] = relationship(cascade="all, delete-orphan")
 
 
 class StageRun(Base):
@@ -245,16 +247,29 @@ def parse_upload(contents: bytes, filename: str, domain: str) -> tuple[list[dict
             status_code = None
         if status_code is not None and not 100 <= status_code <= 599:
             status_code = None
-        live_hosts.append({
+        live_host = {
             "url": url[:2048],
             "host": host,
             "status_code": status_code,
             "title": str(row.get("title", ""))[:512] or None,
-        })
+        }
+        screenshot_name = row.get("screenshot")
+        if isinstance(screenshot_name, str) and screenshot_name == Path(screenshot_name).name and "\\" not in screenshot_name:
+            screenshot_file = (SCREENSHOT_DIR / screenshot_name).resolve()
+            if screenshot_file.parent == SCREENSHOT_DIR.resolve() and screenshot_file.is_file():
+                live_host["screenshot"] = f"/static/screenshots/{screenshot_name}"
+        live_hosts.append(live_host)
     return merged, live_hosts
 
 
 def as_dict(scan: Scan) -> dict:
+    screenshots = {item.host: item.file_path for item in scan.screenshots}
+    live_hosts = []
+    for row in scan.live_hosts:
+        item = {"url": row.url, "host": row.host, "status_code": row.status_code, "title": row.title}
+        if row.host in screenshots:
+            item["screenshot"] = screenshots[row.host]
+        live_hosts.append(item)
     return {
         "id": scan.id,
         "domain": scan.domain.name,
@@ -266,10 +281,7 @@ def as_dict(scan: Scan) -> dict:
              "first_seen_scan_id": row.first_seen_scan_id}
             for row in sorted(scan.subdomains, key=lambda row: row.name)
         ],
-        "live_hosts": [
-            {"url": row.url, "host": row.host, "status_code": row.status_code, "title": row.title}
-            for row in scan.live_hosts
-        ],
+        "live_hosts": live_hosts,
     }
 
 
@@ -340,7 +352,10 @@ async def import_results(
         db.add(Subdomain(scan_id=scan_id, name=name, sources=item["sources"],
                          first_seen_scan_id=previously_seen.get(name) or scan_id))
     for item in live_hosts:
-        db.add(LiveHost(scan_id=scan_id, **item))
+        screenshot = item.get("screenshot")
+        db.add(LiveHost(scan_id=scan_id, **{key: value for key, value in item.items() if key != "screenshot"}))
+        if screenshot:
+            db.add(Screenshot(scan_id=scan_id, host=item["host"], file_path=screenshot))
     db.add(StageRun(scan_id=scan_id, stage="import", status="complete", count=len(subdomains),
                     log_tail=f"Imported {len(subdomains)} subdomains and {len(live_hosts)} live hosts"))
     db.commit()

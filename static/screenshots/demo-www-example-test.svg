@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title description">
+  <title id="title">Synthetic preview for www.example.test</title>
+  <desc id="description">A fictional website placeholder for the recon-dash demo.</desc>
+  <rect width="1280" height="720" fill="#eef3ef"/>
+  <rect x="0" y="0" width="1280" height="72" fill="#176f51"/>
+  <circle cx="48" cy="36" r="16" fill="#d4edda"/>
+  <text x="80" y="44" fill="#ffffff" font-family="Arial, sans-serif" font-size="24" font-weight="700">Example Test</text>
+  <rect x="96" y="150" width="1088" height="450" rx="8" fill="#ffffff" stroke="#d7dfda" stroke-width="2"/>
+  <text x="144" y="245" fill="#176f51" font-family="Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="2">SYNTHETIC DEMO IMAGE</text>
+  <text x="144" y="318" fill="#172722" font-family="Arial, sans-serif" font-size="48" font-weight="700">www.example.test</text>
+  <text x="144" y="372" fill="#64736d" font-family="Arial, sans-serif" font-size="22">Fictional placeholder. No real website was captured.</text>
+  <rect x="144" y="430" width="188" height="54" rx="4" fill="#176f51"/>
+  <text x="180" y="465" fill="#ffffff" font-family="Arial, sans-serif" font-size="18" font-weight="700">Demo only</text>
+</svg>

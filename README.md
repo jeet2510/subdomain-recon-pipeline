@@ -1,4 +1,4 @@
-# recon-dash
+# subdomain-recon-pipeline
 
 recon-dash is a Dockerized dashboard for importing and reviewing subdomain results. It does not enumerate domains, probe hosts, or make network requests to any domain in an import.
 
@@ -8,6 +8,7 @@ recon-dash is a Dockerized dashboard for importing and reviewing subdomain resul
 2. Set `MYSQL_PASSWORD` and `MYSQL_ROOT_PASSWORD` to strong, unique values. Set `APP_TOKEN` to a separate long random value.
 3. Run `make up`.
 4. Open [http://127.0.0.1:8000](http://127.0.0.1:8000) and enter the API token in the dashboard.
+5. To try the included synthetic dataset, download it from the dashboard, enter `example.test`, and import the JSON file. Its sample screenshots are fictional SVG placeholders and no hosts are contacted.
 
 The host port is bound to `127.0.0.1`. The container refuses to start on a wildcard interface without `APP_TOKEN`. MySQL is not published to the host. Scan records persist in the named MySQL volume; raw imports and summaries persist in the `recon_data` volume under `/data/<domain>/<scan_id>/`.
 
@@ -28,6 +29,8 @@ Upload one UTF-8 `.json` or `.csv` file and enter the domain it belongs to. JSON
 ```
 
 CSV requires a `name` column. A `sources` column is optional. Out-of-scope names and live-host URLs are discarded; names are lowercased, wildcard prefixes are removed, and duplicates are merged. Uploads are limited to 5 MB and 10,000 rows. The API accepts `Authorization: Bearer <APP_TOKEN>` when `APP_TOKEN` is configured.
+
+The downloadable demo fixture is [static/demo-scan.json](static/demo-scan.json). Its screenshot references resolve only to existing local files in `static/screenshots/`; imports cannot request remote screenshots or arbitrary local paths.
 
 ## Dashboard features
 
@@ -62,5 +65,3 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 PATH=".venv/bin:$PATH" make test
 ```
-
-# subdomain-recon-pipeline

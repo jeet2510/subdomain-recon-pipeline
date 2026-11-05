@@ -124,17 +124,9 @@
             margin-bottom: 20px;
         }
 
-        .runner-grid {
-            display: grid;
-            grid-template-columns: minmax(260px, 1fr) auto;
-            gap: 14px;
-            align-items: end;
-            margin-top: 10px;
-        }
-
         .import-panel {
             display: grid;
-            grid-template-columns: minmax(210px, 1fr) minmax(220px, 1fr) auto;
+            grid-template-columns: minmax(170px, .8fr) minmax(220px, 1fr) minmax(170px, .8fr) auto;
             gap: 14px;
             align-items: end;
         }
@@ -185,42 +177,6 @@
         button:disabled {
             opacity: .55;
             cursor: not-allowed;
-        }
-
-        .progress-box {
-            display: none;
-            margin-top: 18px;
-            padding: 14px;
-            background: #f8faf8;
-            border: 1px solid var(--line);
-            border-radius: 4px;
-        }
-
-        .progress-meta {
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-            margin-bottom: 8px;
-        }
-
-        .progress-meta span {
-            font-family: var(--mono);
-            font-weight: 700;
-            color: var(--green);
-        }
-
-        .progress-track {
-            height: 12px;
-            background: #e1e8e3;
-            border-radius: 6px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            width: 0%;
-            background: var(--green);
-            transition: width 0.3s ease;
         }
 
         .message {
@@ -448,6 +404,31 @@
             color: var(--muted);
             font-size: 12px;
         }
+
+        @media (max-width: 760px) {
+            .topline {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .import-panel,
+            .columns {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .stat {
+                border-right: 0;
+                border-bottom: 1px solid var(--line);
+            }
+
+            .stat:last-child {
+                border-bottom: 0;
+            }
+        }
     </style>
 </head>
 
@@ -463,45 +444,16 @@
     <main>
         <div class="topline">
             <div>
-                <p class="eyebrow">Automated Asset Intelligence</p>
-                <h1>Asset Discovery & Verification</h1>
+                <p class="eyebrow">Authorized data review</p>
+                <h1>Imported Asset Review</h1>
             </div>
-            <div class="notice">OWASP Amass + crt.sh + Certspotter + HTTP 200 Snapshots</div>
+            <div class="notice">Import-only dashboard. Listed hosts are not contacted or verified.</div>
         </div>
 
-        <section class="panel" aria-labelledby="runner-title">
-            <h2 id="runner-title">1-Click Automated Recon</h2>
-            <p class="small">Executes passive sources, probes initial HTTP status, and captures snapshots for active
-                services.</p>
-
-            <div class="runner-grid">
-                <div>
-                    <label for="recon-domain">Target Domain</label>
-                    <input id="recon-domain" placeholder="example.com" autocomplete="off">
-                </div>
-                <div>
-                    <label>&nbsp;</label>
-                    <button id="run-script-button" type="button">⚡ Start Scan & Screenshots</button>
-                </div>
-            </div>
-
-            <div id="progress-container" class="progress-box">
-                <div class="progress-meta">
-                    <strong id="progress-label">Initializing background job...</strong>
-                    <span id="progress-percent">0%</span>
-                </div>
-                <div class="progress-track">
-                    <div id="progress-bar-fill" class="progress-fill"></div>
-                </div>
-            </div>
-
-            <p id="runner-status" class="message" role="status" aria-live="polite"></p>
-        </section>
-
         <section class="panel" aria-labelledby="import-title">
-            <h2 id="import-title">Manual Results Import</h2>
+            <h2 id="import-title">Import Results</h2>
             <p class="small">JSON accepts <code>subdomains</code> and optional <code>live_hosts</code> arrays. CSV
-                requires a <code>name</code> column[cite: 6].</p>
+                requires a <code>name</code> column. <a href="/static/demo-scan.json" download>Download synthetic sample</a>.</p>
             <form id="import-form" class="import-panel">
                 <div>
                     <label for="domain">Domain</label>
@@ -510,6 +462,10 @@
                 <div>
                     <label for="file">Results file (.json or .csv)</label>
                     <input id="file" name="file" type="file" accept=".json,.csv,application/json,text/csv" required>
+                </div>
+                <div>
+                    <label for="token">API token</label>
+                    <input id="token" type="password" autocomplete="current-password">
                 </div>
                 <div>
                     <label>&nbsp;</label>
@@ -563,7 +519,7 @@
                 </div>
             </div>
             <div id="results" class="table-wrap">
-                <div class="empty">Execute an automated scan or import a file above to view hosts.</div>
+                <div class="empty">Import a file above to review its hosts.</div>
             </div>
         </section>
     </main>
@@ -574,7 +530,10 @@
         let ascending = true;
 
         async function api(path, options = {}) {
-            const response = await fetch(path, options);
+            const headers = new Headers(options.headers || {});
+            const token = $('#token').value.trim();
+            if (token) headers.set('Authorization', `Bearer ${token}`);
+            const response = await fetch(path, { ...options, headers });
             if (!response.ok) {
                 const body = await response.json().catch(() => ({}));
                 throw new Error(body.detail || `Request failed (${response.status})`);
@@ -706,75 +665,6 @@
             renderTable();
             setControls(true);
         }
-
-        // --- 1-Click Automated Scan with Progress Bar ---
-        $('#run-script-button').addEventListener('click', async () => {
-            const domain = $('#recon-domain').value.trim();
-            const btn = $('#run-script-button');
-            const progBox = $('#progress-container');
-            const barFill = $('#progress-bar-fill');
-            const progLabel = $('#progress-label');
-            const progPercent = $('#progress-percent');
-            const statusMsg = $('#runner-status');
-
-            if (!domain) {
-                statusMsg.textContent = 'Please enter a target domain.';
-                statusMsg.classList.remove('ok');
-                return;
-            }
-
-            btn.disabled = true;
-            progBox.style.display = 'block';
-            barFill.style.width = '0%';
-            progPercent.textContent = '0%';
-            progLabel.textContent = 'Starting multi-engine discovery...';
-            statusMsg.textContent = '';
-
-            try {
-                const startRes = await api('/api/run-recon-async', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ domain: domain })
-                });
-                const { task_id } = await startRes.json();
-
-                const poll = setInterval(async () => {
-                    try {
-                        const res = await api(`/api/task-status?id=${encodeURIComponent(task_id)}`);
-                        const data = await res.json();
-
-                        barFill.style.width = `${data.progress}%`;
-                        progPercent.textContent = `${data.progress}%`;
-                        progLabel.textContent = data.message;
-
-                        if (data.status === 'completed') {
-                            clearInterval(poll);
-                            btn.disabled = false;
-                            statusMsg.textContent = `Completed! Discovered ${data.subdomains_count} subdomains (${data.live_count} responsive HTTP 200).`;
-                            statusMsg.classList.add('ok');
-
-                            if (data.scan_id) {
-                                await showScan(data.scan_id);
-                            }
-                        } else if (data.status === 'failed') {
-                            clearInterval(poll);
-                            btn.disabled = false;
-                            statusMsg.textContent = `Pipeline error: ${data.message}`;
-                            statusMsg.classList.remove('ok');
-                        }
-                    } catch (err) {
-                        clearInterval(poll);
-                        btn.disabled = false;
-                        statusMsg.textContent = 'Network error checking progress.';
-                    }
-                }, 1200);
-
-            } catch (err) {
-                btn.disabled = false;
-                statusMsg.textContent = `Could not start task: ${err.message}`;
-                statusMsg.classList.remove('ok');
-            }
-        });
 
         // --- Manual File Import Form ---
         $('#import-form').addEventListener('submit', async (event) => {
