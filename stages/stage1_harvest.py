@@ -294,6 +294,14 @@ def run_stage1(
     with open(stage1_file, "w", encoding="utf-8") as f:
         json.dump(stage1_payload, f, indent=2)
 
+    # Write count.txt for legacy runner/monitoring loops
+    count_file = os.path.join(scan_dir, "count.txt")
+    try:
+        with open(count_file, "w", encoding="utf-8") as f:
+            f.write(str(len(subdomains_list)))
+    except Exception:
+        pass
+
     # Manifest file
     manifest_payload = {
         "target_domain": valid_domain,

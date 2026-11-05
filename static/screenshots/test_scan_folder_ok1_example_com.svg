@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14211d"/>
+      <stop offset="100%" stop-color="#1b2e28"/>
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#bg)"/>
+  <rect x="50" y="50" width="1180" height="620" rx="10" fill="#1e342e" stroke="#2d4f45" stroke-width="2"/>
+  <circle cx="85" cy="85" r="7" fill="#e74c3c"/>
+  <circle cx="107" cy="85" r="7" fill="#f1c40f"/>
+  <circle cx="129" cy="85" r="7" fill="#2ecc71"/>
+  <text x="85" y="180" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, monospace" font-size="34" font-weight="bold" fill="#ffffff">ok1.example.com</text>
+  <rect x="85" y="215" width="170" height="34" rx="6" fill="#176f51"/>
+  <text x="100" y="238" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, monospace" font-size="16" font-weight="bold" fill="#ffffff">HTTP 200 OK</text>
+  <text x="85" y="300" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, monospace" font-size="18" fill="#8da399">Target URL: <tspan fill="#ffffff">https://ok1.example.com</tspan></text>
+  <text x="85" y="340" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, monospace" font-size="18" fill="#8da399">Response Time: <tspan fill="#ffffff">110.0 ms</tspan></text>
+  <text x="85" y="380" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, monospace" font-size="18" fill="#8da399">Captured: <tspan fill="#ffffff">2026-11-05 21:44:49 UTC</tspan></text>
+</svg>

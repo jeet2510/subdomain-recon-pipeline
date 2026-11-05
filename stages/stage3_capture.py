@@ -259,6 +259,30 @@ def run_stage3(
     with open(stage3_file, "w", encoding="utf-8") as f:
         json.dump(final_payload, f, indent=2)
 
+    # Legacy & backward compatibility files
+    recon_dash_file = os.path.join(scan_dir, f"recon_dash_{domain}.json")
+    scan_result_file = os.path.join(scan_dir, "scan_result.json")
+    try:
+        with open(recon_dash_file, "w", encoding="utf-8") as f:
+            json.dump(final_payload, f, indent=2)
+        with open(scan_result_file, "w", encoding="utf-8") as f:
+            json.dump(final_payload, f, indent=2)
+    except Exception:
+        pass
+
+    # Copy screenshots to global static/screenshots directory as well
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    global_shots = os.path.join(base_dir, "static", "screenshots")
+    if os.path.exists(screenshots_dir) and os.path.exists(global_shots):
+        for shot_name in os.listdir(screenshots_dir):
+            src_shot = os.path.join(screenshots_dir, shot_name)
+            if os.path.isfile(src_shot):
+                try:
+                    shutil.copy2(src_shot, os.path.join(global_shots, shot_name))
+                    shutil.copy2(src_shot, os.path.join(global_shots, f"{scan_id}_{shot_name}"))
+                except Exception:
+                    pass
+
     # Update manifest.json
     if os.path.exists(manifest_file):
         try:

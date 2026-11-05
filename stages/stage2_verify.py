@@ -12,14 +12,20 @@ import argparse
 import concurrent.futures
 import json
 import os
+import http.client
 import re
+import ssl
 import sys
 import threading
 import time
 from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-import httpx
+try:
+    import httpx
+except ImportError:
+    httpx = None
+
 from stages.schemas import MANIFEST_SCHEMA, STAGE2_SCHEMA, validate_schema
 
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -36,15 +42,7 @@ def extract_title(html_text: str) -> Optional[str]:
     return None
 
 
-def probe_single_host(
-    host: str,
-    timeout_sec: float = 2.5,
-) -> Dict[str, Any]:
-    """Perform non-redirect-following health check on a host.
-
-    Tries HTTPS first; if that fails or times out, tries HTTP.
-    Returns categorized host record with status code and response time.
-    """
+def _probe_httpx(host: str, timeout_sec: float) -> Dict[str, Any]:
     transport = httpx.HTTPTransport(verify=False, retries=0)
     client_timeout = httpx.Timeout(timeout_sec, connect=timeout_sec, read=timeout_sec, write=timeout_sec)
 
@@ -69,7 +67,7 @@ def probe_single_host(
                     pass
 
             return _categorize_host(host, url, code, elapsed_ms, title=title, error=None)
-    except Exception as e_https:
+    except Exception:
         pass
 
     # 2. Try HTTP as fallback
@@ -94,7 +92,6 @@ def probe_single_host(
 
             return _categorize_host(host, url_http, code, elapsed_ms, title=title, error=None)
     except Exception as e_http:
-        # Host is unreachable
         return _categorize_host(
             host,
             url,
@@ -103,6 +100,74 @@ def probe_single_host(
             title=None,
             error=str(e_http) or "Connection failed",
         )
+
+
+def _probe_stdlib(host: str, timeout_sec: float) -> Dict[str, Any]:
+    ssl_ctx = ssl._create_unverified_context()
+
+    # 1. Try HTTPS
+    url = f"https://{host}"
+    t0 = time.perf_counter()
+    try:
+        conn = http.client.HTTPSConnection(host, timeout=timeout_sec, context=ssl_ctx)
+        conn.request("GET", "/", headers={"User-Agent": USER_AGENT})
+        resp = conn.getresponse()
+        elapsed_ms = round((time.perf_counter() - t0) * 1000, 1)
+        code = resp.status
+        title = None
+        ctype = resp.getheader("Content-Type", "")
+        if "text/html" in ctype:
+            try:
+                title = extract_title(resp.read(8192).decode("utf-8", errors="ignore"))
+            except Exception:
+                pass
+        conn.close()
+        return _categorize_host(host, url, code, elapsed_ms, title=title, error=None)
+    except Exception:
+        pass
+
+    # 2. Try HTTP as fallback
+    url_http = f"http://{host}"
+    t0 = time.perf_counter()
+    try:
+        conn = http.client.HTTPConnection(host, timeout=timeout_sec)
+        conn.request("GET", "/", headers={"User-Agent": USER_AGENT})
+        resp = conn.getresponse()
+        elapsed_ms = round((time.perf_counter() - t0) * 1000, 1)
+        code = resp.status
+        title = None
+        ctype = resp.getheader("Content-Type", "")
+        if "text/html" in ctype:
+            try:
+                title = extract_title(resp.read(8192).decode("utf-8", errors="ignore"))
+            except Exception:
+                pass
+        conn.close()
+        return _categorize_host(host, url_http, code, elapsed_ms, title=title, error=None)
+    except Exception as e_http:
+        return _categorize_host(
+            host,
+            url,
+            status_code=None,
+            elapsed_ms=None,
+            title=None,
+            error=str(e_http) or "Connection failed",
+        )
+
+
+def probe_single_host(
+    host: str,
+    timeout_sec: float = 2.5,
+) -> Dict[str, Any]:
+    """Perform non-redirect-following health check on a host.
+
+    Uses httpx when installed; otherwise uses standard library http.client.
+    Tries HTTPS first; if that fails or times out, tries HTTP.
+    Returns categorized host record with status code and response time.
+    """
+    if httpx is not None:
+        return _probe_httpx(host, timeout_sec)
+    return _probe_stdlib(host, timeout_sec)
 
 
 def _categorize_host(

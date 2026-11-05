@@ -119,6 +119,43 @@ class ReconStateMachine:
                 with open(self.stage1_file, "r", encoding="utf-8") as f:
                     stage1_data = json.load(f)
                 validate_schema(stage1_data, STAGE1_SCHEMA)
+                if not os.path.exists(self.manifest_file):
+                    now_iso = datetime.now(timezone.utc).isoformat()
+                    manifest_payload = {
+                        "target_domain": self.domain,
+                        "timestamp": stage1_data.get("timestamp", now_iso),
+                        "total_unique_subdomains": stage1_data.get("total", len(stage1_data.get("subdomains", []))),
+                        "execution_config": cfg,
+                        "stages": {
+                            "stage1": {
+                                "status": "completed",
+                                "started_at": now_iso,
+                                "finished_at": now_iso,
+                                "output_file": "stage1_subdomains.json",
+                                "count": len(stage1_data.get("subdomains", [])),
+                                "error": None,
+                            },
+                            "stage2": {
+                                "status": "pending",
+                                "started_at": None,
+                                "finished_at": None,
+                                "output_file": None,
+                                "total_scanned": None,
+                                "total_200": None,
+                                "error": None,
+                            },
+                            "stage3": {
+                                "status": "pending",
+                                "started_at": None,
+                                "finished_at": None,
+                                "output_file": None,
+                                "total_captured": None,
+                                "error": None,
+                            },
+                        },
+                    }
+                    with open(self.manifest_file, "w", encoding="utf-8") as f:
+                        json.dump(manifest_payload, f, indent=2)
             else:
                 def stage1_progress(pct: int, msg: str):
                     self.emit_telemetry(pct, "stage1", msg)
@@ -177,6 +214,31 @@ class ReconStateMachine:
 
         # Final success transition
         self.status = "completed"
+
+        # Compatibility files
+        recon_dash_file = os.path.join(self.scan_dir, f"recon_dash_{self.domain}.json")
+        scan_result_file = os.path.join(self.scan_dir, "scan_result.json")
+        try:
+            with open(recon_dash_file, "w", encoding="utf-8") as f:
+                json.dump(stage3_data, f, indent=2)
+            with open(scan_result_file, "w", encoding="utf-8") as f:
+                json.dump(stage3_data, f, indent=2)
+        except Exception:
+            pass
+
+        # Update persistent scans.json registry
+        index_file = os.path.join(self.data_dir, "scans.json")
+        try:
+            scans = {}
+            if os.path.exists(index_file):
+                with open(index_file, "r", encoding="utf-8") as f:
+                    scans = json.load(f)
+            scans[self.scan_folder] = stage3_data
+            with open(index_file, "w", encoding="utf-8") as f:
+                json.dump(scans, f, indent=2)
+        except Exception:
+            pass
+
         self.emit_telemetry(
             100,
             "completed",
