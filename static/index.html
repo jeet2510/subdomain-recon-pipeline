@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f2f5f2">
+    <title>recon-dash | Asset Discovery</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --paper: #f2f5f2;
+            --surface: #ffffff;
+            --ink: #172722;
+            --muted: #64736d;
+            --line: #d7dfda;
+            --green: #176f51;
+            --orange: #a64b27;
+            --red: #a33636;
+            --mono: "SFMono-Regular", Consolas, monospace;
+            --sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--paper);
+            color: var(--ink);
+            font: 15px/1.5 var(--sans);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            padding: 18px 4vw;
+            border-bottom: 1px solid var(--line);
+            background: #e8eee9;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 19px;
+            font-weight: 750;
+        }
+
+        .brand-mark {
+            width: 28px;
+            height: 28px;
+            display: grid;
+            place-items: center;
+            border-radius: 6px;
+            background: var(--green);
+            color: white;
+            font: 700 14px var(--mono);
+        }
+
+        nav {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--ink);
+            text-decoration-thickness: 1px;
+            text-underline-offset: 4px;
+        }
+
+        nav a[aria-current="page"] {
+            color: var(--green);
+            font-weight: 700;
+        }
+
+        main {
+            width: min(1320px, 92vw);
+            margin: 30px auto 70px;
+        }
+
+        .topline {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(24px, 3vw, 36px);
+            line-height: 1.15;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .eyebrow {
+            margin: 0 0 5px;
+            color: var(--green);
+            font: 700 11px var(--mono);
+            text-transform: uppercase;
+        }
+
+        .notice {
+            padding: 9px 12px;
+            border-left: 3px solid var(--green);
+            background: #e8f5ed;
+            color: #175438;
+            font-size: 13px;
+        }
+
+        .panel {
+            border: 1px solid var(--line);
+            background: var(--surface);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .runner-grid {
+            display: grid;
+            grid-template-columns: minmax(260px, 1fr) auto;
+            gap: 14px;
+            align-items: end;
+            margin-top: 10px;
+        }
+
+        .import-panel {
+            display: grid;
+            grid-template-columns: minmax(210px, 1fr) minmax(220px, 1fr) auto;
+            gap: 14px;
+            align-items: end;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        input,
+        select,
+        button {
+            min-height: 42px;
+            border: 1px solid #aebbb3;
+            border-radius: 4px;
+            padding: 9px 11px;
+            font: inherit;
+        }
+
+        input,
+        select {
+            width: 100%;
+            background: white;
+            color: var(--ink);
+        }
+
+        input[type="file"] {
+            padding: 6px;
+        }
+
+        button {
+            border-color: var(--green);
+            background: var(--green);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button.secondary {
+            background: white;
+            color: var(--green);
+        }
+
+        button:disabled {
+            opacity: .55;
+            cursor: not-allowed;
+        }
+
+        .progress-box {
+            display: none;
+            margin-top: 18px;
+            padding: 14px;
+            background: #f8faf8;
+            border: 1px solid var(--line);
+            border-radius: 4px;
+        }
+
+        .progress-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .progress-meta span {
+            font-family: var(--mono);
+            font-weight: 700;
+            color: var(--green);
+        }
+
+        .progress-track {
+            height: 12px;
+            background: #e1e8e3;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--green);
+            transition: width 0.3s ease;
+        }
+
+        .message {
+            min-height: 24px;
+            margin: 10px 0 0;
+            color: var(--red);
+            font-size: 14px;
+        }
+
+        .message.ok {
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            margin: 20px 0;
+            border-top: 1px solid var(--line);
+            border-bottom: 1px solid var(--line);
+            background: var(--surface);
+        }
+
+        .stat {
+            padding: 16px 20px;
+            border-right: 1px solid var(--line);
+        }
+
+        .stat:last-child {
+            border-right: 0;
+        }
+
+        .stat strong {
+            display: block;
+            font: 700 27px var(--mono);
+        }
+
+        .stat span {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin: 28px 0 10px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .toolbar input {
+            width: min(280px, 62vw);
+        }
+
+        .toolbar button {
+            min-height: 36px;
+            padding: 6px 10px;
+            font-size: 13px;
+        }
+
+        .columns {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(260px, .9fr);
+            gap: 20px;
+        }
+
+        .funnel {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 100px;
+        }
+
+        .funnel-block {
+            flex: 1;
+            padding: 12px 14px;
+            border-left: 4px solid var(--green);
+            background: #edf5ef;
+        }
+
+        .funnel-block.live {
+            border-color: #2b7a4b;
+            background: #eef8f2;
+        }
+
+        .funnel-block strong {
+            display: block;
+            font: 700 22px var(--mono);
+        }
+
+        .funnel-block span {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .funnel-arrow {
+            color: var(--muted);
+            font: 20px var(--mono);
+        }
+
+        .tool-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .tool-row {
+            display: grid;
+            grid-template-columns: minmax(80px, .8fr) 2fr 60px;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+        }
+
+        .tool-name {
+            overflow-wrap: anywhere;
+            font-family: var(--mono);
+        }
+
+        .bar-track {
+            height: 10px;
+            background: #e8eeea;
+        }
+
+        .bar {
+            height: 100%;
+            min-width: 2px;
+            background: var(--green);
+        }
+
+        .tool-count {
+            text-align: right;
+            color: var(--muted);
+            font-family: var(--mono);
+        }
+
+        .table-wrap {
+            overflow: auto;
+            border: 1px solid var(--line);
+            background: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th,
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5eae6;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        th {
+            background: #edf2ee;
+            color: #42534b;
+            font: 700 11px var(--mono);
+            text-transform: uppercase;
+        }
+
+        td:first-child {
+            font-family: var(--mono);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .badge-live {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .badge-redirect {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        .badge-off {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #e2e3e5;
+        }
+
+        .thumb {
+            display: inline-block;
+            height: 38px;
+            width: 68px;
+            border-radius: 4px;
+            border: 1px solid #cdd6d1;
+            object-fit: cover;
+            vertical-align: middle;
+            transition: transform 0.15s ease-in-out;
+        }
+
+        .thumb:hover {
+            transform: scale(2.2);
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .empty {
+            padding: 32px 16px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .small {
+            color: var(--muted);
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="brand"><span class="brand-mark" aria-hidden="true">r/</span>recon-dash</div>
+        <nav aria-label="Main navigation">
+            <a href="/" aria-current="page">Dashboard</a>
+            <a href="/history">History</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="topline">
+            <div>
+                <p class="eyebrow">Automated Asset Intelligence</p>
+                <h1>Asset Discovery & Verification</h1>
+            </div>
+            <div class="notice">OWASP Amass + crt.sh + Certspotter + HTTP 200 Snapshots</div>
+        </div>
+
+        <section class="panel" aria-labelledby="runner-title">
+            <h2 id="runner-title">1-Click Automated Recon</h2>
+            <p class="small">Executes passive sources, probes initial HTTP status, and captures snapshots for active
+                services.</p>
+
+            <div class="runner-grid">
+                <div>
+                    <label for="recon-domain">Target Domain</label>
+                    <input id="recon-domain" placeholder="example.com" autocomplete="off">
+                </div>
+                <div>
+                    <label>&nbsp;</label>
+                    <button id="run-script-button" type="button">⚡ Start Scan & Screenshots</button>
+                </div>
+            </div>
+
+            <div id="progress-container" class="progress-box">
+                <div class="progress-meta">
+                    <strong id="progress-label">Initializing background job...</strong>
+                    <span id="progress-percent">0%</span>
+                </div>
+                <div class="progress-track">
+                    <div id="progress-bar-fill" class="progress-fill"></div>
+                </div>
+            </div>
+
+            <p id="runner-status" class="message" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="panel" aria-labelledby="import-title">
+            <h2 id="import-title">Manual Results Import</h2>
+            <p class="small">JSON accepts <code>subdomains</code> and optional <code>live_hosts</code> arrays. CSV
+                requires a <code>name</code> column[cite: 6].</p>
+            <form id="import-form" class="import-panel">
+                <div>
+                    <label for="domain">Domain</label>
+                    <input id="domain" name="domain" placeholder="example.com" autocomplete="url" required>
+                </div>
+                <div>
+                    <label for="file">Results file (.json or .csv)</label>
+                    <input id="file" name="file" type="file" accept=".json,.csv,application/json,text/csv" required>
+                </div>
+                <div>
+                    <label>&nbsp;</label>
+                    <button id="import-button" type="submit">Import File</button>
+                </div>
+            </form>
+            <p id="message" class="message" role="status" aria-live="polite"></p>
+        </section>
+
+        <div class="stats" aria-label="Scan summary">
+            <div class="stat"><strong id="total-count">--</strong><span>discovered subdomains</span></div>
+            <div class="stat"><strong id="live-count">--</strong><span>HTTP 200 OK services</span></div>
+            <div class="stat"><strong id="scan-time">--</strong><span>scan timestamp</span></div>
+        </div>
+
+        <div class="columns">
+            <section aria-labelledby="funnel-title">
+                <div class="section-head">
+                    <h2 id="funnel-title">Coverage Ratio</h2>
+                    <span id="active-domain" class="small">No active scan</span>
+                </div>
+                <div class="panel funnel">
+                    <div class="funnel-block">
+                        <strong id="funnel-total">0</strong><span>total subdomains</span>
+                    </div>
+                    <span class="funnel-arrow" aria-hidden="true">&gt;</span>
+                    <div class="funnel-block live">
+                        <strong id="funnel-live">0</strong><span>200 OK assets</span>
+                    </div>
+                </div>
+            </section>
+            <section aria-labelledby="tools-title">
+                <div class="section-head">
+                    <h2 id="tools-title">Discovery Sources</h2>
+                </div>
+                <div id="source-list" class="panel tool-list">
+                    <p class="empty">No scan results loaded.</p>
+                </div>
+            </section>
+        </div>
+
+        <section aria-labelledby="table-title">
+            <div class="section-head">
+                <h2 id="table-title">Subdomain Assets</h2>
+                <div class="toolbar">
+                    <input id="search" type="search" placeholder="Filter domains or sources..." disabled>
+                    <button type="button" id="sort" class="secondary" disabled>Sort A-Z</button>
+                    <button type="button" id="export-json" class="secondary" disabled>Export JSON</button>
+                    <button type="button" id="export-csv" class="secondary" disabled>Export CSV</button>
+                    <button type="button" id="report" class="secondary" disabled>Markdown Report</button>
+                </div>
+            </div>
+            <div id="results" class="table-wrap">
+                <div class="empty">Execute an automated scan or import a file above to view hosts.</div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const $ = (selector) => document.querySelector(selector);
+        let currentScan = null;
+        let ascending = true;
+
+        async function api(path, options = {}) {
+            const response = await fetch(path, options);
+            if (!response.ok) {
+                const body = await response.json().catch(() => ({}));
+                throw new Error(body.detail || `Request failed (${response.status})`);
+            }
+            return response;
+        }
+
+        function setMessage(text, success = false) {
+            $('#message').textContent = text;
+            $('#message').classList.toggle('ok', success);
+        }
+
+        function setControls(enabled) {
+            ['#search', '#sort', '#export-json', '#export-csv', '#report'].forEach((selector) => {
+                $(selector).disabled = !enabled;
+            });
+        }
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+        }
+
+        function renderSources(items) {
+            const counts = new Map();
+            const unique = new Map();
+            for (const item of items) {
+                for (const source of item.sources || ['pipeline']) {
+                    counts.set(source, (counts.get(source) || 0) + 1);
+                    if ((item.sources || []).length === 1) unique.set(source, (unique.get(source) || 0) + 1);
+                }
+            }
+            const entries = [...counts].sort((a, b) => a[0].localeCompare(b[0]));
+            const max = Math.max(1, ...entries.map((entry) => entry[1]));
+            $('#source-list').innerHTML = entries.length ? entries.map(([name, count]) => `
+                <div class="tool-row">
+                    <span class="tool-name">${escapeHtml(name)}</span>
+                    <div class="bar-track" role="img" aria-label="${count} subdomains">
+                        <div class="bar" style="width:${Math.round(count / max * 100)}%"></div>
+                    </div>
+                    <span class="tool-count">${count} / ${unique.get(name) || 0}</span>
+                </div>`).join('') : '<p class="empty">No source labels in this import.</p>';
+        }
+
+        function renderTable() {
+            if (!currentScan) return;
+            const query = $('#search').value.toLowerCase();
+
+            const liveMap = new Map();
+            (currentScan.live_hosts || []).forEach(h => liveMap.set(h.host, h));
+
+            const rows = currentScan.subdomains.filter(row =>
+                `${row.name} ${(row.sources || []).join(' ')}`.toLowerCase().includes(query)
+            );
+            rows.sort((a, b) => ascending ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
+
+            if (!rows.length) {
+                $('#results').innerHTML = '<div class="empty">No matching subdomains.</div>';
+                return;
+            }
+
+            $('#results').innerHTML = `<table>
+                <thead>
+                    <tr>
+                        <th scope="col">Subdomain</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Sources</th>
+                        <th scope="col">Preview</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows.map(row => {
+                const liveInfo = liveMap.get(row.name);
+                let badge = '<span class="badge badge-off">Unreachable</span>';
+
+                if (liveInfo) {
+                    if (liveInfo.status_code === 200 || liveInfo.is_200) {
+                        badge = '<span class="badge badge-live">200 OK</span>';
+                    } else {
+                        badge = `<span class="badge badge-redirect">${liveInfo.status_code}</span>`;
+                    }
+                }
+
+                const previewHtml = (liveInfo && liveInfo.screenshot)
+                    ? `<a href="${liveInfo.screenshot}" target="_blank" title="View Full Screenshot">
+                                 <img class="thumb" src="${liveInfo.screenshot}" alt="${escapeHtml(row.name)}">
+                               </a>`
+                    : '<span class="small">No snapshot</span>';
+
+                return `<tr>
+                            <td>
+                                <a href="https://${escapeHtml(row.name)}" target="_blank" style="color:var(--ink);text-decoration:none;font-weight:600;">
+                                    ${escapeHtml(row.name)} ↗
+                                </a>
+                            </td>
+                            <td>${badge}</td>
+                            <td><span class="small">${escapeHtml((row.sources || []).join(', '))}</span></td>
+                            <td>${previewHtml}</td>
+                        </tr>`;
+            }).join('')}
+                </tbody>
+            </table>`;
+        }
+
+        async function download(path, filename) {
+            const response = await api(path);
+            const blob = await response.blob();
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        async function showScan(id) {
+            const response = await api(`/api/scans/${encodeURIComponent(id)}`);
+            currentScan = await response.json();
+            const total = currentScan.subdomains.length;
+            const liveHosts = currentScan.live_hosts || [];
+            const count200 = liveHosts.filter(h => h.status_code === 200 || h.is_200).length;
+
+            $('#total-count').textContent = total;
+            $('#live-count').textContent = `${count200} (200 OK) / ${liveHosts.length} Active`;
+            $('#scan-time').textContent = new Date(currentScan.started_at).toLocaleString();
+            $('#funnel-total').textContent = total;
+            $('#funnel-live').textContent = `${count200} / ${liveHosts.length}`;
+            $('#active-domain').textContent = currentScan.domain;
+            $('#domain').value = currentScan.domain;
+            renderSources(currentScan.subdomains);
+            renderTable();
+            setControls(true);
+        }
+
+        // --- 1-Click Automated Scan with Progress Bar ---
+        $('#run-script-button').addEventListener('click', async () => {
+            const domain = $('#recon-domain').value.trim();
+            const btn = $('#run-script-button');
+            const progBox = $('#progress-container');
+            const barFill = $('#progress-bar-fill');
+            const progLabel = $('#progress-label');
+            const progPercent = $('#progress-percent');
+            const statusMsg = $('#runner-status');
+
+            if (!domain) {
+                statusMsg.textContent = 'Please enter a target domain.';
+                statusMsg.classList.remove('ok');
+                return;
+            }
+
+            btn.disabled = true;
+            progBox.style.display = 'block';
+            barFill.style.width = '0%';
+            progPercent.textContent = '0%';
+            progLabel.textContent = 'Starting multi-engine discovery...';
+            statusMsg.textContent = '';
+
+            try {
+                const startRes = await api('/api/run-recon-async', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ domain: domain })
+                });
+                const { task_id } = await startRes.json();
+
+                const poll = setInterval(async () => {
+                    try {
+                        const res = await api(`/api/task-status?id=${encodeURIComponent(task_id)}`);
+                        const data = await res.json();
+
+                        barFill.style.width = `${data.progress}%`;
+                        progPercent.textContent = `${data.progress}%`;
+                        progLabel.textContent = data.message;
+
+                        if (data.status === 'completed') {
+                            clearInterval(poll);
+                            btn.disabled = false;
+                            statusMsg.textContent = `Completed! Discovered ${data.subdomains_count} subdomains (${data.live_count} responsive HTTP 200).`;
+                            statusMsg.classList.add('ok');
+
+                            if (data.scan_id) {
+                                await showScan(data.scan_id);
+                            }
+                        } else if (data.status === 'failed') {
+                            clearInterval(poll);
+                            btn.disabled = false;
+                            statusMsg.textContent = `Pipeline error: ${data.message}`;
+                            statusMsg.classList.remove('ok');
+                        }
+                    } catch (err) {
+                        clearInterval(poll);
+                        btn.disabled = false;
+                        statusMsg.textContent = 'Network error checking progress.';
+                    }
+                }, 1200);
+
+            } catch (err) {
+                btn.disabled = false;
+                statusMsg.textContent = `Could not start task: ${err.message}`;
+                statusMsg.classList.remove('ok');
+            }
+        });
+
+        // --- Manual File Import Form ---
+        $('#import-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const button = $('#import-button');
+            button.disabled = true;
+            setMessage('Parsing and loading records...');
+            try {
+                const form = new FormData(event.currentTarget);
+                const response = await api('/api/import', { method: 'POST', body: form });
+                const result = await response.json();
+                await showScan(result.id);
+                setMessage(`Successfully imported ${result.subdomains} subdomains.`, true);
+            } catch (error) {
+                setMessage(error.message || 'Import failed.');
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        $('#search').addEventListener('input', renderTable);
+        $('#sort').addEventListener('click', () => {
+            ascending = !ascending;
+            $('#sort').textContent = ascending ? 'Sort A-Z' : 'Sort Z-A';
+            renderTable();
+        });
+        $('#export-json').addEventListener('click', () => download(`/api/scans/${currentScan.id}/export?format=json`, `${currentScan.id}.json`).catch((error) => setMessage(error.message)));
+        $('#export-csv').addEventListener('click', () => download(`/api/scans/${currentScan.id}/export?format=csv`, `${currentScan.id}.csv`).catch((error) => setMessage(error.message)));
+        $('#report').addEventListener('click', () => download(`/api/scans/${currentScan.id}/report`, `${currentScan.id}-report.md`).catch((error) => setMessage(error.message)));
+    </script>
+</body>
+
+</html>

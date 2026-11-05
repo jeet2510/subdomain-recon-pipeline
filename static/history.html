@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f2f5f2">
+    <title>recon-dash | History</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --paper: #f2f5f2;
+            --surface: #fff;
+            --ink: #172722;
+            --muted: #64736d;
+            --line: #d7dfda;
+            --green: #176f51;
+            --red: #a33636;
+            --blue: #285a79;
+            --sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+            --mono: "SFMono-Regular", Consolas, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--paper);
+            color: var(--ink);
+            font: 15px/1.5 var(--sans);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            padding: 18px 4vw;
+            border-bottom: 1px solid var(--line);
+            background: #e8eee9;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 19px;
+            font-weight: 750;
+        }
+
+        .mark {
+            width: 28px;
+            height: 28px;
+            display: grid;
+            place-items: center;
+            border-radius: 6px;
+            background: var(--green);
+            color: #fff;
+            font: 700 14px var(--mono);
+        }
+
+        nav {
+            display: flex;
+            gap: 18px;
+        }
+
+        nav a {
+            color: var(--ink);
+            text-underline-offset: 4px;
+        }
+
+        nav a[aria-current=page] {
+            color: var(--green);
+            font-weight: 700;
+        }
+
+        main {
+            width: min(1150px, 92vw);
+            margin: 32px auto 70px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(24px, 3vw, 36px);
+            line-height: 1.15;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .eyebrow {
+            margin: 0 0 5px;
+            color: var(--green);
+            font: 700 11px var(--mono);
+            text-transform: uppercase;
+        }
+
+        .panel {
+            margin-top: 22px;
+            padding: 20px;
+            border: 1px solid var(--line);
+            background: var(--surface);
+        }
+
+        .filters {
+            display: grid;
+            grid-template-columns: minmax(200px, 1fr) auto;
+            gap: 12px;
+            align-items: end;
+            margin-top: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        input,
+        select,
+        button {
+            min-height: 42px;
+            padding: 9px 11px;
+            border: 1px solid #aebbb3;
+            border-radius: 4px;
+            font: inherit;
+        }
+
+        input,
+        select {
+            width: 100%;
+            background: #fff;
+            color: var(--ink);
+        }
+
+        button {
+            border-color: var(--green);
+            background: var(--green);
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: .55;
+            cursor: not-allowed;
+        }
+
+        :focus-visible {
+            outline: 3px solid #e6a848;
+            outline-offset: 2px;
+        }
+
+        .token {
+            display: flex;
+            gap: 12px;
+            align-items: end;
+            max-width: 560px;
+            margin-top: 14px;
+        }
+
+        .token div {
+            flex: 1;
+        }
+
+        .message {
+            min-height: 24px;
+            color: var(--red);
+        }
+
+        .message.ok {
+            color: var(--green);
+        }
+
+        .table-wrap {
+            overflow: auto;
+            margin-top: 18px;
+            border: 1px solid var(--line);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            background: #fff;
+        }
+
+        th,
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5eae6;
+            white-space: nowrap;
+        }
+
+        th {
+            background: #edf2ee;
+            color: #42534b;
+            font: 700 11px var(--mono);
+            text-transform: uppercase;
+        }
+
+        .actions {
+            display: flex;
+            gap: 7px;
+        }
+
+        .actions a {
+            color: var(--green);
+        }
+
+        .diff-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .diff-col {
+            min-width: 0;
+            padding: 14px;
+            border-top: 3px solid var(--blue);
+            background: #eef4f7;
+        }
+
+        .diff-col.removed {
+            border-color: var(--red);
+            background: #fbefed;
+        }
+
+        .diff-col.unchanged {
+            border-color: var(--green);
+            background: #edf5ef;
+        }
+
+        .diff-col h3 {
+            margin: 0 0 8px;
+            font-size: 14px;
+        }
+
+        .diff-col ul {
+            margin: 0;
+            padding-left: 20px;
+            overflow-wrap: anywhere;
+        }
+
+        .empty {
+            padding: 28px 12px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        @media(max-width:700px) {
+            header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .filters {
+                grid-template-columns: 1fr;
+            }
+
+            .diff-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="brand"><span class="mark" aria-hidden="true">r/</span>recon-dash</div>
+        <nav aria-label="Main navigation"><a href="/">Dashboard</a><a href="/history" aria-current="page">History</a>
+        </nav>
+    </header>
+    <main>
+        <p class="eyebrow">Saved imports</p>
+        <h1>Scan history</h1>
+        <section class="panel" aria-labelledby="history-title">
+            <h2 id="history-title">Domain history</h2>
+            <div class="filters">
+                <div><label for="domain">Domain</label><input id="domain" placeholder="example.com"></div><button
+                    id="load">Load history</button>
+            </div>
+            <div class="token">
+                <div><label for="token">API token <span>(only if configured)</span></label><input id="token"
+                        type="password" autocomplete="off" placeholder="Optional bearer token"></div>
+            </div>
+            <p id="message" class="message" role="status" aria-live="polite"></p>
+            <div id="history-table" class="table-wrap">
+                <div class="empty">Enter a domain to view saved imports.</div>
+            </div>
+        </section>
+        <section class="panel" aria-labelledby="diff-title">
+            <h2 id="diff-title">Compare imports</h2>
+            <div class="filters">
+                <div><label for="compare">Compare against</label><select id="compare" disabled>
+                        <option value="">Load at least two imports</option>
+                    </select></div><button id="compare-button" disabled>Compare</button>
+            </div>
+            <div id="diff" class="empty">Choose two imports to see new, removed, and unchanged names.</div>
+        </section>
+    </main>
+    <script>
+        const $ = (selector) => document.querySelector(selector);
+        let scans = [];
+        function headers() { const token = $('#token').value.trim(); return token ? { Authorization: `Bearer ${token}` } : {}; }
+        async function api(path) {
+            const response = await fetch(path, { headers: headers() });
+            if (!response.ok) { const body = await response.json().catch(() => ({})); throw new Error(body.detail || `Request failed (${response.status})`); }
+            return response.json();
+        }
+        function escapeHtml(value) { return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])); }
+        function say(text, ok = false) { $('#message').textContent = text; $('#message').classList.toggle('ok', ok); }
+        async function download(path, filename) {
+            const response = await fetch(path, { headers: headers() });
+            if (!response.ok) { const body = await response.json().catch(() => ({})); throw new Error(body.detail || `Request failed (${response.status})`); }
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(await response.blob());
+            link.download = filename;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+        function renderHistory() {
+            if (!scans.length) { $('#history-table').innerHTML = '<div class="empty">No imports found for this domain.</div>'; return; }
+            $('#history-table').innerHTML = `<table><thead><tr><th>Imported</th><th>Status</th><th>Subdomains</th><th>Scan ID</th><th>Exports</th></tr></thead><tbody>${scans.map((scan) => `
+        <tr><td>${escapeHtml(new Date(scan.started_at).toLocaleString())}</td><td>${escapeHtml(scan.status)}</td><td>${scan.count}</td><td>${escapeHtml(scan.id)}</td>
+        <td class="actions"><a href="#" data-download="/api/scans/${encodeURIComponent(scan.id)}/export?format=json" data-filename="${escapeHtml(scan.id)}.json">JSON</a><a href="#" data-download="/api/scans/${encodeURIComponent(scan.id)}/export?format=csv" data-filename="${escapeHtml(scan.id)}.csv">CSV</a><a href="#" data-download="/api/scans/${encodeURIComponent(scan.id)}/report" data-filename="${escapeHtml(scan.id)}-report.md">Report</a></td></tr>`).join('')}</tbody></table>`;
+            $('#compare').innerHTML = scans.map((scan, index) => `<option value="${escapeHtml(scan.id)}" ${index === 1 ? 'selected' : ''}>${escapeHtml(new Date(scan.started_at).toLocaleString())} - ${escapeHtml(scan.id.slice(0, 8))}</option>`).join('');
+            $('#compare').disabled = scans.length < 2;
+            $('#compare-button').disabled = scans.length < 2;
+        }
+        $('#load').addEventListener('click', async () => {
+            const domain = $('#domain').value.trim();
+            if (!domain) { say('Enter a domain first.'); return; }
+            try {
+                scans = await api(`/api/scans?domain=${encodeURIComponent(domain)}`);
+                renderHistory();
+                say(`Loaded ${scans.length} saved import${scans.length === 1 ? '' : 's'}.`, true);
+            } catch (error) { say(error.message); }
+        });
+        $('#compare-button').addEventListener('click', async () => {
+            if (scans.length < 2) return;
+            const newer = scans[0];
+            const olderId = $('#compare').value;
+            if (!olderId || olderId === newer.id) { say('Choose an import older than the newest one.'); return; }
+            try {
+                const diff = await api(`/api/scans/${encodeURIComponent(newer.id)}/diff?compare_to=${encodeURIComponent(olderId)}`);
+                const column = (name, values, cls) => `<section class="diff-col ${cls}"><h3>${name} (${values.length})</h3>${values.length ? `<ul>${values.map((value) => `<li>${escapeHtml(value)}</li>`).join('')}</ul>` : '<p>None</p>'}</section>`;
+                $('#diff').className = 'diff-grid';
+                $('#diff').innerHTML = column('New', diff.new, '') + column('Removed', diff.removed, 'removed') + column('Unchanged', diff.unchanged, 'unchanged');
+            } catch (error) { say(error.message); }
+        });
+        $('#history-table').addEventListener('click', (event) => {
+            const link = event.target.closest('[data-download]');
+            if (!link) return;
+            event.preventDefault();
+            download(link.dataset.download, link.dataset.filename).catch((error) => say(error.message));
+        });
+    </script>
+</body>
+
+</html>
