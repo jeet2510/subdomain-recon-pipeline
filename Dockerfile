@@ -18,7 +18,9 @@ RUN apt-get update \
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app.py init.sql ./
+COPY app.py runner.py recon.sh init.sql ./
+COPY stages ./stages
+COPY schemas ./schemas
 COPY static ./static
 
 USER app:app

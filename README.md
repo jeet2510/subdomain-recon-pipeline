@@ -1,67 +1,119 @@
 # subdomain-recon-pipeline
 
-recon-dash is a Dockerized dashboard for importing and reviewing subdomain results. It does not enumerate domains, probe hosts, or make network requests to any domain in an import.
+recon-dash is a decoupled, three-stage reconnaissance state machine and dashboard for asset discovery, health verification, and inventory management.
 
-## Quick start
+## Architecture: Decoupled 3-Stage State Machine
 
-1. Copy `.env.example` to `.env`.
-2. Set `MYSQL_PASSWORD` and `MYSQL_ROOT_PASSWORD` to strong, unique values. Set `APP_TOKEN` to a separate long random value.
-3. Run `make up`.
-4. Open [http://127.0.0.1:8000](http://127.0.0.1:8000) and enter the API token in the dashboard.
-5. To try the included synthetic dataset, download it from the dashboard, enter `example.test`, and import the JSON file. Its sample screenshots are fictional SVG placeholders and no hosts are contacted.
+The workflow is decoupled into three sequentially executable, idempotent modules:
 
-The host port is bound to `127.0.0.1`. The container refuses to start on a wildcard interface without `APP_TOKEN`. MySQL is not published to the host. Scan records persist in the named MySQL volume; raw imports and summaries persist in the `recon_data` volume under `/data/<domain>/<scan_id>/`.
-
-## Import format
-
-Upload one UTF-8 `.json` or `.csv` file and enter the domain it belongs to. JSON example:
-
-```json
-{
-  "subdomains": [
-    {"name": "www.example.com", "sources": ["crt.sh", "assetfinder"]},
-    "api.example.com"
-  ],
-  "live_hosts": [
-    {"url": "https://www.example.com", "host": "www.example.com", "status_code": 200, "title": "Example"}
-  ]
-}
+```
+                  ┌──────────────────────────────────────────────┐
+                  │ Stage 1: Harvesting & Normalization (0%-35%) │
+                  └──────────────────────┬───────────────────────┘
+                                         │ writes stage1_subdomains.json & manifest.json
+                                         ▼
+                  ┌──────────────────────────────────────────────┐
+                  │ Stage 2: Availability Verification (35%-75%) │ (Skips Stage 1 if cached)
+                  └──────────────────────┬───────────────────────┘
+                                         │ writes stage2_live_hosts.json
+                                         ▼
+                  ┌──────────────────────────────────────────────┐
+                  │ Stage 3: Artifact Capture (75%-100%)         │
+                  └──────────────────────┬───────────────────────┘
+                                         │ writes stage3_final.json & screenshots/
+                                         ▼
+                             Consolidated Dashboard
 ```
 
-CSV requires a `name` column. A `sources` column is optional. Out-of-scope names and live-host URLs are discarded; names are lowercased, wildcard prefixes are removed, and duplicates are merged. Uploads are limited to 5 MB and 10,000 rows. The API accepts `Authorization: Bearer <APP_TOKEN>` when `APP_TOKEN` is configured.
+### 1. Stage 1: Harvesting & Normalization (Progress: 0% – 35%)
+- Queries passive registries: `crt.sh` (Certificate Transparency logs), `AlienVault OTX` (Passive DNS), `Wayback Machine CDX`, `Certspotter`, `Anubis`, and `HackerTarget`.
+- Extracts apex domain and Subject Alternative Names (SANs) completely.
+- Normalizes records by removing protocols, wildcards, ports, trailing paths, query strings, and duplicate entries.
+- Emits immediate intermediate file: `stage1_subdomains.json`.
+- Generates `manifest.json` tracking domain, timestamp, execution configuration, and stage status.
 
-The downloadable demo fixture is [static/demo-scan.json](static/demo-scan.json). Its screenshot references resolve only to existing local files in `static/screenshots/`; imports cannot request remote screenshots or arbitrary local paths.
+### 2. Stage 2: Availability & Status Verification (Progress: 35% – 75%)
+- Consumes `stage1_subdomains.json`. If this file already exists in the scan folder, Stage 1 is skipped entirely (idempotency).
+- Executes non-redirect-following HTTP and HTTPS health checks with strict socket timeouts (2.5s) and controlled concurrency (worker pools).
+- Categorizes results explicitly into: `200 OK`, `Redirects (301/302)`, `Client Errors (4xx)`, `Server Errors (5xx)`, and `Unreachable`.
+- Records response times (latency in ms) for each reachable host.
+- Emits immediate intermediate file: `stage2_live_hosts.json`.
 
-## Dashboard features
+### 3. Stage 3: Artifact Generation & Capture (Progress: 75% – 100%)
+- Consumes `stage2_live_hosts.json`, filtering exclusively for verified `200 OK` assets.
+- Captures headless screenshots using Chrome/Chromium (or graceful SVG visual fallbacks in headless containers) with batch caps and per-host timeouts.
+- Stores screenshots locally in `screenshots/` inside the scan folder and links relative file paths to host records.
+- Consolidates final dashboard payload to `stage3_final.json`.
 
-- Search and sort imported subdomains, view source counts, and see which names were supplied as live.
-- Browse imports by domain and compare two imports for new, removed, and unchanged names.
-- Export a scan as JSON or CSV, or download a Markdown report.
-- Keep the raw upload and a normalized `summary.json` alongside database records.
+## Storage & Directory Hierarchy
 
-## API
+All outputs are isolated into timestamped directories:
+```
+data/{domain}_{YYYYMMDD_HHMMSS}_{random8char}/
+├── manifest.json            # Target domain, timestamp, execution configuration
+├── stage1_subdomains.json   # Normalized inventory of discovered subdomains
+├── stage2_live_hosts.json   # Status code categorization & response times
+├── screenshots/             # Visual screenshot assets for 200 OK hosts
+└── stage3_final.json        # Unified schema matching dashboard requirements
+```
 
-| Method | Path | Purpose |
+If any stage fails, execution terminates cleanly, preserves all completed stage files, and updates the task status to `failed` with the specific error context.
+
+## Data Contracts & JSON Schemas
+
+All stage boundaries validate inputs and outputs against JSON Schema (Draft-07):
+- `schemas/manifest.schema.json`
+- `schemas/stage1_subdomains.schema.json`
+- `schemas/stage2_live_hosts.schema.json`
+- `schemas/stage3_final.schema.json`
+
+## API Reference
+
+| Method | Path | Description |
 | --- | --- | --- |
-| `POST` | `/api/import` | Multipart form fields `domain` and `file` |
-| `GET` | `/api/domains` | List domains with imported records |
-| `GET` | `/api/scans?domain=example.com` | List imports, newest first |
-| `GET` | `/api/scans/{id}` | Read one import |
-| `GET` | `/api/scans/{id}/diff?compare_to={id}` | Compare imports for the same domain |
-| `GET` | `/api/scans/{id}/export?format=json\|csv` | Download normalized results |
-| `GET` | `/api/scans/{id}/report` | Download a Markdown report |
-| `GET` | `/health` | Container health check |
+| `POST` | `/api/run-recon-async` | Trigger async 3-stage state machine (`{"domain": "...", "skip_stage1_if_cached": true}`) |
+| `GET` | `/api/task-status?id={task_id}` | Poll real-time stage telemetry and milestone progress |
+| `GET` | `/api/scans` | List all discovered scans with status and counts |
+| `GET` | `/api/scans/{id}` | Read consolidated `stage3_final.json` payload |
+| `GET` | `/api/scans/{id}/manifest` | Inspect `manifest.json` metadata |
+| `GET` | `/api/scans/{id}/stage1` | Inspect `stage1_subdomains.json` artifact |
+| `GET` | `/api/scans/{id}/stage2` | Inspect `stage2_live_hosts.json` artifact |
+| `GET` | `/api/scans/{id}/screenshots/{file}` | Fetch captured visual assets |
+| `GET` | `/api/scans/{id}/export?format=json\|csv` | Download normalized results in JSON or CSV |
+| `GET` | `/api/scans/{id}/report` | Download Markdown report |
+| `GET` | `/api/scans/{id}/diff?compare_to={id}` | Compare two scans for added/removed subdomains |
+| `POST` | `/api/import` | Manual upload of existing .json or .csv results |
 
-## Passive and active data
+## CLI Execution
 
-Imported data may include findings gathered elsewhere. recon-dash itself performs neither passive collection (such as certificate-transparency lookups) nor active testing (such as brute-force enumeration or HTTP probing). A domain entry is only used to validate and scope the uploaded file. The report states that host availability has not been independently verified.
-
-Use only data you are authorized to handle. Keep the token and database credentials private, and do not expose this service publicly without a deliberate authenticated deployment configuration.
-
-## Development and tests
-
+Run the complete pipeline:
 ```sh
-python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
+./recon.sh example.com
+```
+
+Or execute individual stages independently:
+```sh
+# Stage 1: Harvesting & Normalization
+python3 -m stages.stage1_harvest example.com data/example.com_custom
+
+# Stage 2: Availability & Status Verification
+python3 -m stages.stage2_verify data/example.com_custom --concurrency 30
+
+# Stage 3: Artifact Generation & Capture
+python3 -m stages.stage3_capture data/example.com_custom --cap 30
+```
+
+## Running the Dashboard
+
+Start the runner service:
+```sh
+python3 runner.py
+```
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000).
+
+## Tests
+
+Run the full test suite:
+```sh
 PATH=".venv/bin:$PATH" make test
 ```

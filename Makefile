@@ -13,4 +13,4 @@ logs:
 	docker compose logs -f --tail=100
 
 test:
-	python3 -m pytest -q
+	PYTHONPATH=. python3 -m pytest -q

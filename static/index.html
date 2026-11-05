@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f2f5f2">
-    <title>recon-dash | Asset Discovery</title>
+    <title>recon-dash | Asset Discovery & Inventory</title>
     <style>
         :root {
             color-scheme: light;
@@ -15,8 +15,13 @@
             --muted: #64736d;
             --line: #d7dfda;
             --green: #176f51;
-            --orange: #a64b27;
+            --green-light: #e8f5ed;
+            --orange: #c46210;
+            --orange-light: #fdf3e7;
             --red: #a33636;
+            --red-light: #fbebeb;
+            --blue: #1e5a84;
+            --blue-light: #edf5fa;
             --mono: "SFMono-Regular", Consolas, monospace;
             --sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
         }
@@ -86,7 +91,7 @@
         .topline {
             display: flex;
             justify-content: space-between;
-            align-items: end;
+            align-items: flex-end;
             gap: 16px;
             margin-bottom: 22px;
         }
@@ -122,6 +127,13 @@
             background: var(--surface);
             padding: 20px;
             margin-bottom: 20px;
+        }
+
+        .grid-launch {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 14px;
+            align-items: end;
         }
 
         .import-panel {
@@ -166,7 +178,12 @@
             color: white;
             font-weight: 700;
             cursor: pointer;
-            transition: opacity 0.2s;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        button:hover:not(:disabled) {
+            opacity: 0.9;
         }
 
         button.secondary {
@@ -174,9 +191,126 @@
             color: var(--green);
         }
 
+        button.secondary:hover:not(:disabled) {
+            background: var(--green-light);
+        }
+
         button:disabled {
             opacity: .55;
             cursor: not-allowed;
+        }
+
+        /* ---------------------------------------------------------------
+           State Machine Telemetry UI
+        --------------------------------------------------------------- */
+        .stage-stepper {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .stage-step {
+            padding: 12px 14px;
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            background: #fafbfa;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .stage-step.active {
+            border-color: var(--blue);
+            background: var(--blue-light);
+        }
+
+        .stage-step.completed {
+            border-color: var(--green);
+            background: var(--green-light);
+        }
+
+        .stage-step.failed {
+            border-color: var(--red);
+            background: var(--red-light);
+        }
+
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .step-title {
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .step-badge {
+            font: 700 11px var(--mono);
+            padding: 2px 6px;
+            border-radius: 3px;
+            background: #e2e8e4;
+            color: var(--muted);
+        }
+
+        .stage-step.active .step-badge {
+            background: var(--blue);
+            color: white;
+        }
+
+        .stage-step.completed .step-badge {
+            background: var(--green);
+            color: white;
+        }
+
+        .stage-step.failed .step-badge {
+            background: var(--red);
+            color: white;
+        }
+
+        .step-desc {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .progress-container {
+            margin: 16px 0 10px;
+        }
+
+        .progress-track {
+            height: 12px;
+            background: #e1e7e3;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #176f51, #21966d);
+            transition: width 0.3s ease;
+        }
+
+        .progress-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-top: 6px;
+            font-family: var(--mono);
+        }
+
+        .telemetry-log {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--ink);
+            background: #fafbfa;
+            border: 1px solid var(--line);
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-top: 10px;
+            min-height: 20px;
         }
 
         .message {
@@ -191,9 +325,12 @@
             font-weight: 600;
         }
 
+        /* ---------------------------------------------------------------
+           Stats & Metrics
+        --------------------------------------------------------------- */
         .stats {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             margin: 20px 0;
             border-top: 1px solid var(--line);
             border-bottom: 1px solid var(--line);
@@ -253,35 +390,42 @@
         .funnel {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             min-height: 100px;
+            overflow-x: auto;
         }
 
         .funnel-block {
             flex: 1;
-            padding: 12px 14px;
+            padding: 10px 12px;
             border-left: 4px solid var(--green);
             background: #edf5ef;
+            min-width: 90px;
         }
 
-        .funnel-block.live {
-            border-color: #2b7a4b;
-            background: #eef8f2;
+        .funnel-block.redirect {
+            border-color: var(--orange);
+            background: var(--orange-light);
+        }
+
+        .funnel-block.error {
+            border-color: var(--red);
+            background: var(--red-light);
+        }
+
+        .funnel-block.unreachable {
+            border-color: var(--muted);
+            background: #f4f6f4;
         }
 
         .funnel-block strong {
             display: block;
-            font: 700 22px var(--mono);
+            font: 700 20px var(--mono);
         }
 
         .funnel-block span {
             color: var(--muted);
-            font-size: 12px;
-        }
-
-        .funnel-arrow {
-            color: var(--muted);
-            font: 20px var(--mono);
+            font-size: 11px;
         }
 
         .tool-list {
@@ -323,6 +467,7 @@
             overflow: auto;
             border: 1px solid var(--line);
             background: white;
+            max-height: 650px;
         }
 
         table {
@@ -344,6 +489,9 @@
             color: #42534b;
             font: 700 11px var(--mono);
             text-transform: uppercase;
+            position: sticky;
+            top: 0;
+            z-index: 2;
         }
 
         td:first-child {
@@ -370,6 +518,12 @@
             border: 1px solid #ffeeba;
         }
 
+        .badge-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
         .badge-off {
             background: #f8f9fa;
             color: #6c757d;
@@ -385,12 +539,14 @@
             object-fit: cover;
             vertical-align: middle;
             transition: transform 0.15s ease-in-out;
+            cursor: pointer;
+            background: #f0f0f0;
         }
 
         .thumb:hover {
             transform: scale(2.2);
             z-index: 10;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
             position: relative;
         }
 
@@ -405,17 +561,41 @@
             font-size: 12px;
         }
 
-        @media (max-width: 760px) {
+        .artifacts-bar {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #edf3ef;
+            border: 1px solid var(--line);
+            border-radius: 4px;
+        }
+
+        .artifacts-bar strong {
+            font-size: 12px;
+            color: var(--ink);
+        }
+
+        .artifacts-bar a {
+            font-size: 12px;
+            color: var(--green);
+            text-decoration: underline;
+            font-family: var(--mono);
+            cursor: pointer;
+        }
+
+        @media (max-width: 860px) {
             .topline {
                 align-items: flex-start;
                 flex-direction: column;
             }
 
+            .grid-launch,
             .import-panel,
-            .columns {
-                grid-template-columns: 1fr;
-            }
-
+            .columns,
+            .stage-stepper,
             .stats {
                 grid-template-columns: 1fr;
             }
@@ -444,17 +624,83 @@
     <main>
         <div class="topline">
             <div>
-                <p class="eyebrow">Authorized data review</p>
-                <h1>Imported Asset Review</h1>
+                <p class="eyebrow">Decoupled Three-Stage Reconnaissance Pipeline</p>
+                <h1>Asset Discovery & Telemetry</h1>
             </div>
-            <div class="notice">Import-only dashboard. Listed hosts are not contacted or verified.</div>
+            <div class="notice">Three-stage state machine active with strict JSON contracts &amp; concrete progress milestones.</div>
         </div>
 
+        <!-- STAGE MACHINE RUNNER PANEL -->
+        <section class="panel" aria-labelledby="runner-title">
+            <h2 id="runner-title">Automated Asset Discovery Pipeline</h2>
+            <p class="small">
+                Executes <strong>Stage 1</strong> (Passive harvesting 0%–35%), <strong>Stage 2</strong> (Non-redirect health checks 35%–75%),
+                and <strong>Stage 3</strong> (Visual artifacts 75%–100%). Idempotent execution skips Stage 1 if cached.
+            </p>
+
+            <form id="recon-form">
+                <div class="grid-launch">
+                    <div>
+                        <label for="recon-domain">Target Apex Domain</label>
+                        <input id="recon-domain" name="domain" placeholder="example.com" autocomplete="url" required>
+                    </div>
+                    <div>
+                        <label>&nbsp;</label>
+                        <button id="launch-recon-btn" type="submit">Launch Discovery</button>
+                    </div>
+                </div>
+                <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="skip-stage1" checked style="width: auto; min-height: auto;">
+                    <label for="skip-stage1" style="margin: 0; font-weight: normal; font-size: 12px;">Reuse Stage 1 subdomains if cached (skip external harvesting)</label>
+                </div>
+            </form>
+
+            <!-- Real-Time Telemetry & Progress Stepper -->
+            <div id="telemetry-panel" style="display: none; margin-top: 20px;">
+                <div class="stage-stepper">
+                    <div id="step-stage1" class="stage-step">
+                        <div class="step-header">
+                            <span class="step-title">Stage 1: Harvest</span>
+                            <span id="badge-stage1" class="step-badge">Pending</span>
+                        </div>
+                        <div class="step-desc">CT logs, passive DNS, SAN extraction &amp; normalization (0% - 35%)</div>
+                    </div>
+                    <div id="step-stage2" class="stage-step">
+                        <div class="step-header">
+                            <span class="step-title">Stage 2: Verify</span>
+                            <span id="badge-stage2" class="step-badge">Pending</span>
+                        </div>
+                        <div class="step-desc">Non-redirect HTTP/HTTPS status &amp; response times (35% - 75%)</div>
+                    </div>
+                    <div id="step-stage3" class="stage-step">
+                        <div class="step-header">
+                            <span class="step-title">Stage 3: Capture</span>
+                            <span id="badge-stage3" class="step-badge">Pending</span>
+                        </div>
+                        <div class="step-desc">Visual snapshots for verified 200 OK assets (75% - 100%)</div>
+                    </div>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                        <div id="progress-bar" class="progress-fill"></div>
+                    </div>
+                    <div class="progress-meta">
+                        <span id="progress-status-text">Ready</span>
+                        <strong id="progress-pct">0%</strong>
+                    </div>
+                </div>
+
+                <div id="telemetry-log" class="telemetry-log">Waiting for pipeline task...</div>
+            </div>
+
+            <p id="recon-message" class="message" role="status" aria-live="polite"></p>
+        </section>
+
+        <!-- MANUAL IMPORT PANEL (Preserves original import flow) -->
         <section class="panel" aria-labelledby="import-title">
             <h2 id="import-title">Import Results</h2>
-            <p class="small">JSON accepts <code>subdomains</code> and optional <code>live_hosts</code> arrays. CSV
-                requires a <code>name</code> column. <a href="/static/demo-scan.json" download>Download synthetic
-                    sample</a>.</p>
+            <p class="small">JSON accepts <code>subdomains</code> and optional <code>live_hosts</code> arrays. CSV requires a <code>name</code> column. <a href="/static/demo-scan.json" download>Download synthetic sample</a>.</p>
             <form id="import-form" class="import-panel">
                 <div>
                     <label for="domain">Domain</label>
@@ -466,7 +712,7 @@
                 </div>
                 <div>
                     <label for="token">API token</label>
-                    <input id="token" type="password" autocomplete="current-password">
+                    <input id="token" type="password" autocomplete="current-password" placeholder="Authorization token">
                 </div>
                 <div>
                     <label>&nbsp;</label>
@@ -476,25 +722,45 @@
             <p id="message" class="message" role="status" aria-live="polite"></p>
         </section>
 
+        <!-- STATS BAR -->
         <div class="stats" aria-label="Scan summary">
             <div class="stat"><strong id="total-count">--</strong><span>discovered subdomains</span></div>
             <div class="stat"><strong id="live-count">--</strong><span>HTTP 200 OK services</span></div>
+            <div class="stat"><strong id="avg-latency">--</strong><span>avg response time</span></div>
             <div class="stat"><strong id="scan-time">--</strong><span>scan timestamp</span></div>
         </div>
 
+        <!-- ARTIFACTS BAR -->
+        <div id="artifacts-bar" class="artifacts-bar" style="display: none;">
+            <strong>Preserved Stage Artifacts:</strong>
+            <a id="link-manifest" target="_blank">[manifest.json]</a>
+            <a id="link-stage1" target="_blank">[stage1_subdomains.json]</a>
+            <a id="link-stage2" target="_blank">[stage2_live_hosts.json]</a>
+            <a id="link-stage3" target="_blank">[stage3_final.json]</a>
+        </div>
+
+        <!-- FUNNEL & SOURCES -->
         <div class="columns">
             <section aria-labelledby="funnel-title">
                 <div class="section-head">
-                    <h2 id="funnel-title">Coverage Ratio</h2>
+                    <h2 id="funnel-title">Response Code Breakdown</h2>
                     <span id="active-domain" class="small">No active scan</span>
                 </div>
                 <div class="panel funnel">
                     <div class="funnel-block">
-                        <strong id="funnel-total">0</strong><span>total subdomains</span>
+                        <strong id="funnel-total">0</strong><span>Total Hosts</span>
                     </div>
-                    <span class="funnel-arrow" aria-hidden="true">&gt;</span>
-                    <div class="funnel-block live">
-                        <strong id="funnel-live">0</strong><span>200 OK assets</span>
+                    <div class="funnel-block" style="border-left-color: var(--green); background: #eef8f2;">
+                        <strong id="funnel-200">0</strong><span>200 OK</span>
+                    </div>
+                    <div class="funnel-block redirect">
+                        <strong id="funnel-redirect">0</strong><span>Redirects</span>
+                    </div>
+                    <div class="funnel-block error">
+                        <strong id="funnel-error">0</strong><span>4xx / 5xx</span>
+                    </div>
+                    <div class="funnel-block unreachable">
+                        <strong id="funnel-unreachable">0</strong><span>Unreachable</span>
                     </div>
                 </div>
             </section>
@@ -508,11 +774,12 @@
             </section>
         </div>
 
+        <!-- ASSETS TABLE -->
         <section aria-labelledby="table-title">
             <div class="section-head">
                 <h2 id="table-title">Subdomain Assets</h2>
                 <div class="toolbar">
-                    <input id="search" type="search" placeholder="Filter domains or sources..." disabled>
+                    <input id="search" type="search" placeholder="Filter domains, status, or sources..." disabled>
                     <button type="button" id="sort" class="secondary" disabled>Sort A-Z</button>
                     <button type="button" id="export-json" class="secondary" disabled>Export JSON</button>
                     <button type="button" id="export-csv" class="secondary" disabled>Export CSV</button>
@@ -520,7 +787,7 @@
                 </div>
             </div>
             <div id="results" class="table-wrap">
-                <div class="empty">Import a file above to review its hosts.</div>
+                <div class="empty">Launch discovery or import a file above to review assets.</div>
             </div>
         </section>
     </main>
@@ -529,6 +796,7 @@
         const $ = (selector) => document.querySelector(selector);
         let currentScan = null;
         let ascending = true;
+        let activePollingTimer = null;
 
         async function api(path, options = {}) {
             const headers = new Headers(options.headers || {});
@@ -547,6 +815,11 @@
             $('#message').classList.toggle('ok', success);
         }
 
+        function setReconMessage(text, success = false) {
+            $('#recon-message').textContent = text;
+            $('#recon-message').classList.toggle('ok', success);
+        }
+
         function setControls(enabled) {
             ['#search', '#sort', '#export-json', '#export-csv', '#report'].forEach((selector) => {
                 $(selector).disabled = !enabled;
@@ -554,9 +827,137 @@
         }
 
         function escapeHtml(value) {
-            return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+            return String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
         }
 
+        // -------------------------------------------------------------------
+        // Real-Time Telemetry & State Polling (/api/task-status)
+        // -------------------------------------------------------------------
+        function updateStepperUI(stage, pct, status) {
+            const s1 = $('#step-stage1');
+            const s2 = $('#step-stage2');
+            const s3 = $('#step-stage3');
+            const b1 = $('#badge-stage1');
+            const b2 = $('#badge-stage2');
+            const b3 = $('#badge-stage3');
+
+            // Reset classes
+            [s1, s2, s3].forEach(el => el.className = 'stage-step');
+
+            if (status === 'failed') {
+                if (stage === 'stage1') { s1.classList.add('failed'); b1.textContent = 'Failed'; }
+                else if (stage === 'stage2') { s1.classList.add('completed'); b1.textContent = 'Done'; s2.classList.add('failed'); b2.textContent = 'Failed'; }
+                else { s1.classList.add('completed'); s2.classList.add('completed'); b1.textContent = 'Done'; b2.textContent = 'Done'; s3.classList.add('failed'); b3.textContent = 'Failed'; }
+                return;
+            }
+
+            // Stage 1 (0 - 35%)
+            if (pct < 35) {
+                s1.classList.add('active');
+                b1.textContent = 'Active';
+                b2.textContent = 'Pending';
+                b3.textContent = 'Pending';
+            } else {
+                s1.classList.add('completed');
+                b1.textContent = 'Done (35%)';
+            }
+
+            // Stage 2 (35 - 75%)
+            if (pct >= 35 && pct < 75) {
+                s2.classList.add('active');
+                b2.textContent = 'Active';
+                b3.textContent = 'Pending';
+            } else if (pct >= 75) {
+                s2.classList.add('completed');
+                b2.textContent = 'Done (75%)';
+            }
+
+            // Stage 3 (75 - 100%)
+            if (pct >= 75 && pct < 100) {
+                s3.classList.add('active');
+                b3.textContent = 'Active';
+            } else if (pct >= 100) {
+                s3.classList.add('completed');
+                b3.textContent = 'Done (100%)';
+            }
+        }
+
+        async function pollTaskStatus(taskId, scanFolder) {
+            try {
+                const resp = await api(`/api/task-status?id=${encodeURIComponent(taskId)}`);
+                const task = await resp.json();
+
+                const pct = task.progress ?? 0;
+                const stage = task.stage ?? 'stage1';
+                const status = task.status ?? 'running';
+                const msg = task.message ?? 'Processing...';
+
+                // Update progress bar
+                $('#progress-bar').style.width = `${pct}%`;
+                $('#progress-pct').textContent = `${pct}%`;
+                $('#progress-status-text').textContent = status === 'completed' ? 'Completed' : (status === 'failed' ? 'Failed' : `Running ${stage}...`);
+                $('#telemetry-log').textContent = msg;
+
+                updateStepperUI(stage, pct, status);
+
+                if (status === 'completed') {
+                    if (activePollingTimer) clearInterval(activePollingTimer);
+                    activePollingTimer = null;
+                    $('#launch-recon-btn').disabled = false;
+                    setReconMessage(`Pipeline complete! Discovered ${task.subdomains_count || 0} subdomains, ${task.live_count || 0} live hosts.`, true);
+                    await showScan(task.scan_id || scanFolder);
+                } else if (status === 'failed') {
+                    if (activePollingTimer) clearInterval(activePollingTimer);
+                    activePollingTimer = null;
+                    $('#launch-recon-btn').disabled = false;
+                    setReconMessage(`Pipeline terminated: ${task.error || msg}`);
+                    // Attempt to display partial stage artifacts if available
+                    if (task.scan_id || scanFolder) {
+                        showScan(task.scan_id || scanFolder).catch(() => {});
+                    }
+                }
+            } catch (err) {
+                // If polling failed temporarily, keep going unless cancelled
+            }
+        }
+
+        // --- Trigger Recon State Machine Form ---
+        $('#recon-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const domain = $('#recon-domain').value.trim();
+            const skipStage1 = $('#skip-stage1').checked;
+            const button = $('#launch-recon-btn');
+
+            if (!domain) return;
+
+            button.disabled = true;
+            setReconMessage('Initializing decoupled state machine...');
+            $('#telemetry-panel').style.display = 'block';
+            $('#progress-bar').style.width = '0%';
+            $('#progress-pct').textContent = '0%';
+            $('#telemetry-log').textContent = 'Launching Stage 1 (Harvesting)...';
+
+            try {
+                const response = await api('/api/run-recon-async', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ domain, skip_stage1_if_cached: skipStage1 })
+                });
+                const result = await response.json();
+                const taskId = result.task_id;
+                const scanId = result.scan_id;
+
+                if (activePollingTimer) clearInterval(activePollingTimer);
+                activePollingTimer = setInterval(() => pollTaskStatus(taskId, scanId), 600);
+            } catch (error) {
+                button.disabled = false;
+                setReconMessage(error.message || 'Failed to start reconnaissance pipeline.');
+            }
+        });
+
+        // -------------------------------------------------------------------
+        // UI Render Functions
+        // -------------------------------------------------------------------
         function renderSources(items) {
             const counts = new Map();
             const unique = new Map();
@@ -575,7 +976,7 @@
                         <div class="bar" style="width:${Math.round(count / max * 100)}%"></div>
                     </div>
                     <span class="tool-count">${count} / ${unique.get(name) || 0}</span>
-                </div>`).join('') : '<p class="empty">No source labels in this import.</p>';
+                </div>`).join('') : '<p class="empty">No source labels in this dataset.</p>';
         }
 
         function renderTable() {
@@ -598,38 +999,55 @@
             $('#results').innerHTML = `<table>
                 <thead>
                     <tr>
-                        <th scope="col">Subdomain</th>
-                        <th scope="col">Status</th>
+                        <th scope="col">Subdomain Asset</th>
+                        <th scope="col">HTTP Status</th>
+                        <th scope="col">Latency</th>
                         <th scope="col">Sources</th>
-                        <th scope="col">Preview</th>
+                        <th scope="col">Snapshot Preview</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${rows.map(row => {
                 const liveInfo = liveMap.get(row.name);
                 let badge = '<span class="badge badge-off">Unreachable</span>';
+                let latencyText = '<span class="small">--</span>';
 
                 if (liveInfo) {
-                    if (liveInfo.status_code === 200 || liveInfo.is_200) {
+                    const code = liveInfo.status_code;
+                    const cat = liveInfo.category || '';
+                    if (code === 200 || liveInfo.is_200) {
                         badge = '<span class="badge badge-live">200 OK</span>';
-                    } else {
-                        badge = `<span class="badge badge-redirect">${liveInfo.status_code}</span>`;
+                    } else if (code >= 300 && code < 400 || cat === 'redirect') {
+                        badge = `<span class="badge badge-redirect">${code || '3xx'} Redirect</span>`;
+                    } else if (code >= 400 && code < 500 || cat === 'client_error') {
+                        badge = `<span class="badge badge-error">${code} Client Err</span>`;
+                    } else if (code >= 500 && code < 600 || cat === 'server_error') {
+                        badge = `<span class="badge badge-error">${code} Server Err</span>`;
+                    }
+
+                    if (liveInfo.response_time_ms !== null && liveInfo.response_time_ms !== undefined) {
+                        latencyText = `<span style="font-family:var(--mono);font-size:12px;">${liveInfo.response_time_ms} ms</span>`;
                     }
                 }
 
-                const previewHtml = (liveInfo && liveInfo.screenshot)
-                    ? `<a href="${liveInfo.screenshot}" target="_blank" title="View Full Screenshot">
-                                 <img class="thumb" src="${liveInfo.screenshot}" alt="${escapeHtml(row.name)}">
-                               </a>`
+                const shotUrl = (liveInfo && (liveInfo.screenshot_url || liveInfo.screenshot)) ? (liveInfo.screenshot_url || liveInfo.screenshot) : null;
+                const previewHtml = shotUrl
+                    ? `<a href="${shotUrl}" target="_blank" title="View Full Snapshot (${escapeHtml(row.name)})">
+                         <img class="thumb" src="${shotUrl}" alt="${escapeHtml(row.name)}" loading="lazy">
+                       </a>`
                     : '<span class="small">No snapshot</span>';
+
+                const targetUrl = (liveInfo && liveInfo.url) ? liveInfo.url : `https://${row.name}`;
 
                 return `<tr>
                             <td>
-                                <a href="https://${escapeHtml(row.name)}" target="_blank" style="color:var(--ink);text-decoration:none;font-weight:600;">
+                                <a href="${escapeHtml(targetUrl)}" target="_blank" style="color:var(--ink);text-decoration:none;font-weight:600;">
                                     ${escapeHtml(row.name)} ↗
                                 </a>
+                                ${(liveInfo && liveInfo.title) ? `<div class="small" style="color:var(--muted);">${escapeHtml(liveInfo.title)}</div>` : ''}
                             </td>
                             <td>${badge}</td>
+                            <td>${latencyText}</td>
                             <td><span class="small">${escapeHtml((row.sources || []).join(', '))}</span></td>
                             <td>${previewHtml}</td>
                         </tr>`;
@@ -651,18 +1069,40 @@
         async function showScan(id) {
             const response = await api(`/api/scans/${encodeURIComponent(id)}`);
             currentScan = await response.json();
-            const total = currentScan.subdomains.length;
+            const total = currentScan.subdomains ? currentScan.subdomains.length : 0;
             const liveHosts = currentScan.live_hosts || [];
-            const count200 = liveHosts.filter(h => h.status_code === 200 || h.is_200).length;
+            const summary = currentScan.summary || {};
+
+            const count200 = summary.total_http_200 ?? liveHosts.filter(h => h.status_code === 200 || h.is_200).length;
+            const countRedirect = summary.total_redirects ?? liveHosts.filter(h => h.category === 'redirect' || (h.status_code >= 300 && h.status_code < 400)).length;
+            const countClientErr = summary.total_client_errors ?? liveHosts.filter(h => h.category === 'client_error' || (h.status_code >= 400 && h.status_code < 500)).length;
+            const countServerErr = summary.total_server_errors ?? liveHosts.filter(h => h.category === 'server_error' || (h.status_code >= 500 && h.status_code < 600)).length;
+            const countUnreach = summary.total_unreachable ?? (total - liveHosts.filter(h => h.status_code > 0).length);
 
             $('#total-count').textContent = total;
-            $('#live-count').textContent = `${count200} (200 OK) / ${liveHosts.length} Active`;
-            $('#scan-time').textContent = new Date(currentScan.started_at).toLocaleString();
+            $('#live-count').textContent = `${count200} (200 OK)`;
+            $('#avg-latency').textContent = summary.avg_response_time_ms ? `${summary.avg_response_time_ms} ms` : '--';
+            $('#scan-time').textContent = new Date(currentScan.started_at || currentScan.timestamp).toLocaleString();
+
             $('#funnel-total').textContent = total;
-            $('#funnel-live').textContent = `${count200} / ${liveHosts.length}`;
+            $('#funnel-200').textContent = count200;
+            $('#funnel-redirect').textContent = countRedirect;
+            $('#funnel-error').textContent = countClientErr + countServerErr;
+            $('#funnel-unreachable').textContent = Math.max(0, countUnreach);
+
             $('#active-domain').textContent = currentScan.domain;
             $('#domain').value = currentScan.domain;
-            renderSources(currentScan.subdomains);
+            $('#recon-domain').value = currentScan.domain;
+
+            // Update artifacts links
+            const artBar = $('#artifacts-bar');
+            artBar.style.display = 'flex';
+            $('#link-manifest').href = `/api/scans/${encodeURIComponent(id)}/manifest`;
+            $('#link-stage1').href = `/api/scans/${encodeURIComponent(id)}/stage1`;
+            $('#link-stage2').href = `/api/scans/${encodeURIComponent(id)}/stage2`;
+            $('#link-stage3').href = `/api/scans/${encodeURIComponent(id)}`;
+
+            renderSources(currentScan.subdomains || []);
             renderTable();
             setControls(true);
         }

@@ -1,0 +1,162 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Stage3FinalSchema",
+  "type": "object",
+  "required": [
+    "id",
+    "domain",
+    "started_at",
+    "finished_at",
+    "status",
+    "summary",
+    "subdomains",
+    "live_hosts"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "domain": {
+      "type": "string"
+    },
+    "started_at": {
+      "type": "string"
+    },
+    "finished_at": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "failed"
+      ]
+    },
+    "manifest": {
+      "type": "object"
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "total_subdomains",
+        "total_responding",
+        "total_http_200"
+      ],
+      "properties": {
+        "total_subdomains": {
+          "type": "integer"
+        },
+        "total_responding": {
+          "type": "integer"
+        },
+        "total_http_200": {
+          "type": "integer"
+        },
+        "total_redirects": {
+          "type": "integer"
+        },
+        "total_client_errors": {
+          "type": "integer"
+        },
+        "total_server_errors": {
+          "type": "integer"
+        },
+        "total_unreachable": {
+          "type": "integer"
+        },
+        "screenshots_captured": {
+          "type": "integer"
+        },
+        "avg_response_time_ms": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "subdomains": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "live_hosts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "host",
+          "url",
+          "status_code",
+          "category",
+          "is_200"
+        ],
+        "properties": {
+          "host": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "status_code": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "category": {
+            "type": "string"
+          },
+          "is_200": {
+            "type": "boolean"
+          },
+          "response_time_ms": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "screenshot": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "screenshot_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

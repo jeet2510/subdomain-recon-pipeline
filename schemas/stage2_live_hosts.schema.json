@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Stage2LiveHostsSchema",
+  "type": "object",
+  "required": [
+    "domain",
+    "total_scanned",
+    "timestamp",
+    "summary",
+    "live_hosts"
+  ],
+  "properties": {
+    "domain": {
+      "type": "string"
+    },
+    "total_scanned": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "timestamp": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "200_ok",
+        "redirects",
+        "client_errors",
+        "server_errors",
+        "unreachable"
+      ],
+      "properties": {
+        "200_ok": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "redirects": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "client_errors": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "server_errors": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unreachable": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "live_hosts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "host",
+          "url",
+          "status_code",
+          "category",
+          "is_200"
+        ],
+        "properties": {
+          "host": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "status_code": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "200 OK",
+              "redirect",
+              "client_error",
+              "server_error",
+              "unreachable"
+            ]
+          },
+          "is_200": {
+            "type": "boolean"
+          },
+          "response_time_ms": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

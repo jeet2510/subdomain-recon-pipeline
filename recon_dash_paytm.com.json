@@ -1,0 +1,497 @@
+{
+  "domain": "paytm.com",
+  "subdomains": [
+    {
+      "name": "accounts-analyticsapp.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "accounts-service.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "accounts.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "ads.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "adtech-tracking-prod.ad.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "agentic-bot-staging.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "akamai-accounts-plus.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "ambassador.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "api-payouts.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "api.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "apiproxy.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "appcdn.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "assetscdn.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "assetscdn1.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "beta.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "blksms1.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "blog.ads.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "blog.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "boss.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "bugbounty.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "business-staging.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "business.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "cart.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "catalog.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "cdn3.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "cdp-insights-origin.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "cdp-insights.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "channels-images.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "cif.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "cstpanel.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "ctest.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "dashboard-preprod.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "dashboard.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "deeppurple.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "delivery.community.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "demowa.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "dev1-iot-int.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "dev2-iot-int.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "developer-assets.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "developer-cms-staging-static.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "developer-cms.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "developer-ui-staging.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "developer.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "digitalassets.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "elink.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "email.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "marketing.ads.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "microsite.ad.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "o1.email.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    },
+    {
+      "name": "www.business.paytm.com",
+      "sources": [
+        "osint-aggregator"
+      ]
+    }
+  ],
+  "live_hosts": [
+    {
+      "host": "accounts-analyticsapp.paytm.com",
+      "status_code": 404,
+      "is_200": false
+    },
+    {
+      "host": "accounts.paytm.com",
+      "status_code": 403,
+      "is_200": false
+    },
+    {
+      "host": "assetscdn1.paytm.com",
+      "status_code": 403,
+      "is_200": false
+    },
+    {
+      "host": "adtech-tracking-prod.ad.paytm.com",
+      "status_code": 404,
+      "is_200": false
+    },
+    {
+      "host": "ads.paytm.com",
+      "status_code": 200,
+      "is_200": true
+    },
+    {
+      "host": "accounts-service.paytm.com",
+      "status_code": 403,
+      "is_200": false
+    },
+    {
+      "host": "ambassador.paytm.com",
+      "status_code": 200,
+      "is_200": true
+    },
+    {
+      "host": "assetscdn.paytm.com",
+      "status_code": 403,
+      "is_200": false
+    },
+    {
+      "host": "apiproxy.paytm.com",
+      "status_code": 404,
+      "is_200": false
+    },
+    {
+      "host": "cart.paytm.com",
+      "status_code": 404,
+      "is_200": false
+    },
+    {
+      "host": "catalog.paytm.com",
+      "status_code": 404,
+      "is_200": false
+    },
+    {
+      "host": "cdp-insights.paytm.com",
+      "status_code": 403,
+      "is_200": false
+    },
+    {
+      "host": "boss.paytm.com",
+      "status_code": 403,
+      "is_200": false
+    },
+    {
+      "host": "appcdn.paytm.com",
+      "status_code": 403,
+      "is_200": false
+    },
+    {
+      "host": "business.paytm.com",
+      "status_code": 200,
+      "is_200": true
+    },
+    {
+      "host": "dashboard.paytm.com",
+      "status_code": 200,
+      "is_200": true
+    },
+    {
+      "host": "api-payouts.paytm.com",
+      "status_code": 404,
+      "is_200": false
+    },
+    {
+      "host": "dashboard-preprod.paytm.com",
+      "status_code": 403,
+      "is_200": false
+    },
+    {
+      "host": "blog.paytm.com",
+      "status_code": 200,
+      "is_200": true
+    },
+    {
+      "host": "bugbounty.paytm.com",
+      "status_code": 200,
+      "is_200": true
+    },
+    {
+      "host": "delivery.community.paytm.com",
+      "status_code": 404,
+      "is_200": false
+    },
+    {
+      "host": "cstpanel.paytm.com",
+      "status_code": 200,
+      "is_200": true
+    },
+    {
+      "host": "channels-images.paytm.com",
+      "status_code": 403,
+      "is_200": false
+    },
+    {
+      "host": "blog.ads.paytm.com",
+      "status_code": 404,
+      "is_200": false
+    },
+    {
+      "host": "developer-assets.paytm.com",
+      "status_code": 403,
+      "is_200": false
+    },
+    {
+      "host": "developer-cms.paytm.com",
+      "status_code": 200,
+      "is_200": true
+    },
+    {
+      "host": "demowa.paytm.com",
+      "status_code": 200,
+      "is_200": true
+    },
+    {
+      "host": "microsite.ad.paytm.com",
+      "status_code": 404,
+      "is_200": false
+    },
+    {
+      "host": "dev1-iot-int.paytm.com",
+      "status_code": 404,
+      "is_200": false
+    },
+    {
+      "host": "dev2-iot-int.paytm.com",
+      "status_code": 404,
+      "is_200": false
+    },
+    {
+      "host": "agentic-bot-staging.paytm.com",
+      "status_code": 301,
+      "is_200": false
+    },
+    {
+      "host": "www.business.paytm.com",
+      "status_code": 200,
+      "is_200": true
+    },
+    {
+      "host": "developer.paytm.com",
+      "status_code": 200,
+      "is_200": true
+    },
+    {
+      "host": "deeppurple.paytm.com",
+      "status_code": 200,
+      "is_200": true
+    },
+    {
+      "host": "marketing.ads.paytm.com",
+      "status_code": 404,
+      "is_200": false
+    },
+    {
+      "host": "cif.paytm.com",
+      "status_code": 200,
+      "is_200": true
+    },
+    {
+      "host": "elink.paytm.com",
+      "status_code": 404,
+      "is_200": false
+    },
+    {
+      "host": "digitalassets.paytm.com",
+      "status_code": 302,
+      "is_200": false
+    }
+  ]
+}

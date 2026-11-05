@@ -369,10 +369,83 @@ async def import_results(
             "live_hosts": len(live_hosts)}
 
 
+@app.get("/api/task-status")
+def task_status(id: str = ""):
+    import runner
+    if id in runner.TASKS:
+        return runner.TASKS[id]
+    raise HTTPException(status_code=404, detail="Task not found")
+
+
+@app.post("/api/run-recon-async")
+async def run_recon_async(payload: dict):
+    import threading
+    import runner
+    from stages.stage1_harvest import validate_target_domain
+
+    domain_raw = payload.get("domain", "").strip()
+    skip_stage1 = payload.get("skip_stage1_if_cached", True)
+    try:
+        domain = validate_target_domain(domain_raw)
+    except Exception as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+
+    task_id = str(uuid.uuid4())
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    rand8 = secrets.token_hex(4)
+    scan_folder = f"{domain}_{ts}_{rand8}"
+
+    runner.TASKS[task_id] = {
+        "task_id": task_id,
+        "domain": domain,
+        "scan_id": scan_folder,
+        "status": "running",
+        "stage": "stage1",
+        "progress": 0,
+        "message": "Initializing decoupled 3-stage state machine...",
+        "error": None,
+        "milestone": {
+            "stage1_completed": False,
+            "stage2_completed": False,
+            "stage3_completed": False,
+        },
+        "subdomains_count": 0,
+        "live_count": 0,
+    }
+
+    thread = threading.Thread(
+        target=runner.run_state_machine_worker,
+        args=(domain, task_id, scan_folder, skip_stage1),
+        daemon=True,
+    )
+    thread.start()
+    return {"task_id": task_id, "scan_id": scan_folder}
+
+
+@app.get("/api/scans/{scan_id}/screenshots/{filename}")
+def get_scan_screenshot(scan_id: str, filename: str):
+    shot_path = DATA_DIR / scan_id / "screenshots" / filename
+    if not shot_path.is_file():
+        shot_path = SCREENSHOT_DIR / filename
+    if shot_path.is_file():
+        media_type = "image/svg+xml" if filename.endswith(".svg") else "image/png"
+        return FileResponse(str(shot_path), media_type=media_type)
+    raise HTTPException(status_code=404, detail="Screenshot not found")
+
+
 @app.get("/api/scans/{scan_id}", dependencies=[Depends(require_token)])
 def get_scan(scan_id: str, db: Session = Depends(get_db)):
     scan = db.get(Scan, scan_id)
     if scan is None:
+        # Check on-disk stage3_final.json
+        disk_file = DATA_DIR / scan_id / "stage3_final.json"
+        if not disk_file.is_file():
+            disk_file = DATA_DIR / scan_id / "scan_result.json"
+        if disk_file.is_file():
+            try:
+                return json.loads(disk_file.read_text(encoding="utf-8"))
+            except Exception:
+                pass
         raise HTTPException(status_code=404, detail="Scan not found")
     return as_dict(scan)
 
